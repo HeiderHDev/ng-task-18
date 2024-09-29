@@ -1,4 +1,6 @@
+import { FormControl } from '@angular/forms';
+
 export interface FormSignUp {
-  email: string;
-  password: string;
+  email: FormControl<string | null>;
+  password: FormControl<string | null>;
 }
