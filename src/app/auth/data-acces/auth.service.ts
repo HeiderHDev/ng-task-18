@@ -3,7 +3,7 @@ import { Auth, createUserWithEmailAndPassword } from '@angular/fire/auth';
 import { UserSignUp } from '../interface/user-sign-up.interface';
 @Injectable()
 export class AuthService {
-  private _auth = inject(Auth);
+  private readonly _auth = inject(Auth);
 
   signUp(user: UserSignUp) {
     return createUserWithEmailAndPassword(
