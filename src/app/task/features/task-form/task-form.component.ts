@@ -1,6 +1,6 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, effect, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { taskCreate, TaskService } from '../../data-acces/task.service';
+import { Task, taskCreate, TaskService } from '../../data-acces/task.service';
 import { toast } from 'ngx-sonner';
 import { Router } from '@angular/router';
 
@@ -18,10 +18,23 @@ export default class TaskFormComponent {
 
   loading = signal(false);
 
+  idTask = input.required<string>();
+
   form = this._formBuilder.group({
     title: this._formBuilder.control('', Validators.required),
     completed: this._formBuilder.control(false, Validators.required),
   });
+
+  constructor() {
+    effect(() => {
+      console.log(this.idTask());
+
+      const id = this.idTask();
+      if (id) {
+        this.getTask(id);
+      }
+    });
+  }
 
   async submit() {
     this.loading.set(true);
@@ -32,8 +45,13 @@ export default class TaskFormComponent {
           title: title || '',
           completed: !!completed,
         };
-        await this._taskService.create(task);
-        toast.success('Tarea creada correctamente');
+        const id = this.idTask();
+        if (id) {
+          await this._taskService.update(task, id);
+        } else {
+          await this._taskService.create(task);
+        }
+        toast.success(`Tarea ${id ? 'actualizada' : 'creada'} correctamente`);
         this._router.navigateByUrl('/tasks');
       } catch (error) {
         toast.error('Error al crear la tarea');
@@ -41,5 +59,17 @@ export default class TaskFormComponent {
         this.loading.set(false);
       }
     }
+  }
+
+  async getTask(id: string) {
+    const taskSnapshot = await this._taskService.getTask(id);
+    if (!taskSnapshot.exists()) return;
+
+    const task = taskSnapshot.data() as Task;
+
+    this.form.patchValue({
+      title: task.title,
+      completed: task.completed,
+    });
   }
 }
